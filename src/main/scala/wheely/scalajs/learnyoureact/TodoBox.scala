@@ -73,16 +73,51 @@ object TodoBox extends js.JSApp {
     def todos: TodoListData =
         List(TodoData("Shopping", "Milk"), TodoData("Hair cut", "13:00"))
 
-    val TodoList = ReactComponentB[TodoListData]("TodoList")
-        .render_P(data =>
+    final case class TodoListState(data: TodoListData,
+                                   titleValue: Option[String],
+                                   detailValue: Option[String])
+
+    final class TodoListBackend($: BackendScope[TodoListData, TodoListState]) {
+
+        private def changeTitle(e: ReactEventI) =
+            $.modState(_.copy(titleValue = Some(e.target.value)))
+
+        private def changeDetail(e: ReactEventI) =
+            $.modState(_.copy(detailValue = Some(e.target.value)))
+
+        private def addTodo() = $.modState {
+            case TodoListState(data, Some(title), Some(detail)) =>
+                TodoListState(data :+ TodoData(title, detail), None, None)
+            case state => state
+        }
+
+        def render(state: TodoListState) =
             <.div(^.className := "todoList",
+                <.div(
+                    "Title:",
+                    <.input(
+                        ^.`type` := "text",
+                        ^.value := state.titleValue,
+                        ^.onChange ==> changeTitle),
+                    "Detail:",
+                    <.input(
+                        ^.`type` := "text",
+                        ^.value := state.detailValue,
+                        ^.onChange ==> changeDetail),
+                    <.button(^.onClick --> addTodo, "Add")
+                ),
                 <.table(TodoTableStyle.tableBorder,
                     <.tbody(
-                        data.map(d => Todo.withKey(d.title)(d))
+                        state.data.map(d => Todo.withKey(d.title)(d))
                     )
                 )
             )
-        )
+    }
+
+    val TodoList = ReactComponentB[TodoListData]("TodoList")
+        .initialState(TodoListState(Nil, None, None))
+        .renderBackend[TodoListBackend]
+        .componentDidMount($ => $.modState(_.copy(data = $.props)))
         .build
 
     val TodoForm = ReactComponentB[Unit]("TodoForm")
