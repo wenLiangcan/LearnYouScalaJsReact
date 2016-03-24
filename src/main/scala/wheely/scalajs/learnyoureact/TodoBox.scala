@@ -39,17 +39,22 @@ object TodoBox extends js.JSApp {
 
     final case class TodoState(checked: Boolean)
 
-    final class TodoBackend($: BackendScope[TodoData, TodoState]) {
+    type TodoProps = (TodoData, TodoListBackend)
+
+    final class TodoBackend($: BackendScope[TodoProps, TodoState]) {
         private def handleChange(title: String)(e: ReactEventI) = {
             val newState: Boolean = e.target.checked
             $.modState(_.copy(checked = newState)) >>
                 Callback.log(s"$title: $newState")
         }
 
-        def render(state: TodoState, data: TodoData) =
-            <.tr(
+        def render(state: TodoState, props: TodoProps) = props match {
+            case (data, listBackend) => <.tr(
                 state.checked ?= TodoTableStyle.checkedTodo,
                 !state.checked ?= TodoTableStyle.notCheckedTodo,
+                <.td(TodoTableStyle.tableContent,
+                    <.button(^.onClick --> listBackend.onDelete(data.title), "X")
+                ),
                 <.td(TodoTableStyle.tableContent,
                     <.input(
                         ^.`type` := "checkbox",
@@ -61,9 +66,10 @@ object TodoBox extends js.JSApp {
                 <.td(TodoTableStyle.tableContent,
                     data.detail)
             )
+        }
     }
 
-    val Todo = ReactComponentB[TodoData]("Todo")
+    val Todo = ReactComponentB[TodoProps]("Todo")
         .initialState(TodoState(false))
         .renderBackend[TodoBackend]
         .build
@@ -75,7 +81,12 @@ object TodoBox extends js.JSApp {
 
     final case class TodoListState(data: TodoListData,
                                    titleValue: Option[String],
-                                   detailValue: Option[String])
+                                   detailValue: Option[String]) {
+
+        def removeTodo(title: String): TodoListState = {
+            this.copy(data = data.filter { case TodoData(t, _) => t != title })
+        }
+    }
 
     final class TodoListBackend($: BackendScope[TodoListData, TodoListState]) {
 
@@ -90,6 +101,9 @@ object TodoBox extends js.JSApp {
                 TodoListState(data :+ TodoData(title, detail), None, None)
             case state => state
         }
+
+        def onDelete(title: String): Callback =
+            $.modState(_.removeTodo(title))
 
         def render(state: TodoListState) =
             <.div(^.className := "todoList",
@@ -108,7 +122,7 @@ object TodoBox extends js.JSApp {
                 ),
                 <.table(TodoTableStyle.tableBorder,
                     <.tbody(
-                        state.data.map(d => Todo.withKey(d.title)(d))
+                        state.data.map(d => Todo.withKey(d.title)((d, this)))
                     )
                 )
             )
