@@ -63,18 +63,22 @@ object TodoBox extends js.JSApp {
         .renderBackend[TodoBackend]
         .build
 
-    val TodoList = ReactComponentB[Unit]("TodoList")
-        .render(_ =>
+    type TodoListData = List[TodoData]
+
+    def todos: TodoListData =
+        List(TodoData("Shopping", "Milk"), TodoData("Hair cut", "13:00"))
+
+    val TodoList = ReactComponentB[TodoListData]("TodoList")
+        .render_P(data =>
             <.div(^.className := "todoList",
                 <.table(TodoTableStyle.tableBorder,
                     <.tbody(
-                        Todo(TodoData("Shopping", "Milk")),
-                        Todo(TodoData("Hair cut", "13:00"))
+                        data.map(d => Todo.withKey(d.title)(d))
                     )
                 )
             )
         )
-        .buildU
+        .build
 
     val TodoForm = ReactComponentB[Unit]("TodoForm")
         .render(_ =>
@@ -84,18 +88,18 @@ object TodoBox extends js.JSApp {
         )
         .buildU
 
-    val TodoBox = ReactComponentB[Unit]("Todo Box")
-        .render(_ =>
+    val TodoBox = ReactComponentB[TodoListData]("Todo Box")
+        .render_P(todos =>
             <.div(^.className := "todoBox",
                 <.h1("Todos"),
-                TodoList(),
+                TodoList(todos),
                 TodoForm()
             ))
-        .buildU
+        .build
 
     @JSExport
     override def main(): Unit = {
         TodoTableStyle.addToDocument()
-        ReactDOM.render(TodoBox(), dom.document.getElementById("root"))
+        ReactDOM.render(TodoBox(todos), dom.document.getElementById("root"))
     }
 }
