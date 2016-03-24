@@ -14,15 +14,33 @@ import scala.scalajs.js.annotation.JSExport
 object TodoBox extends js.JSApp {
     final case class TodoData(title: String, detail: String)
 
-    val Todo = ReactComponentB[TodoData]("Todo")
-        .render_P(data =>
+    final case class TodoState(checked: Boolean)
+
+    final class TodoBackend($: BackendScope[TodoData, TodoState]) {
+        private def handleChange(title: String)(e: ReactEventI) = {
+            val newState: Boolean = e.target.checked
+            $.modState(_.copy(checked = newState)) >>
+                Callback.log(s"$title: $newState")
+        }
+
+        def render(state: TodoState, data: TodoData) =
             <.tr(
+                <.td(^.border := "1px solid black;",
+                    <.input(
+                        ^.`type` := "checkbox",
+                        ^.checked := state.checked,
+                        ^.onChange ==> handleChange(data.title))
+                ),
                 <.td(^.border := "1px solid black;",
                     data.title),
                 <.td(^.border := "1px solid black;",
                     data.detail)
             )
-        )
+    }
+
+    val Todo = ReactComponentB[TodoData]("Todo")
+        .initialState(TodoState(false))
+        .renderBackend[TodoBackend]
         .build
 
     val TodoList = ReactComponentB[Unit]("TodoList")
