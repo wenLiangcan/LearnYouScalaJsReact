@@ -13,10 +13,28 @@ import scala.scalajs.js.annotation.JSExport
 @JSExport("TodoBox")
 object TodoBox extends js.JSApp {
 
+    val TodoList = ReactComponentB[Unit]("TodoList")
+        .render(_ =>
+            <.div(^.className := "todoList",
+                "I am a TodoList."
+            )
+        )
+        .buildU
+
+    val TodoForm = ReactComponentB[Unit]("TodoForm")
+        .render(_ =>
+            <.div(^.className := "todoForm",
+                "I am a TodoForm."
+            )
+        )
+        .buildU
+
     val TodoBox = ReactComponentB[Unit]("Todo Box")
         .render(_ =>
             <.div(^.className := "todoBox",
-                "Hello, world!"
+                <.h1("Todos"),
+                TodoList(),
+                TodoForm()
             ))
         .buildU
 
