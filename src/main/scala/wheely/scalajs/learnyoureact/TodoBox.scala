@@ -56,8 +56,7 @@ object TodoBox extends js.JSApp {
                     <.button(^.onClick --> listBackend.onDelete(data.title), "X")
                 ),
                 <.td(TodoTableStyle.tableContent,
-                    <.input(
-                        ^.`type` := "checkbox",
+                    <.input.checkbox(
                         ^.checked := state.checked,
                         ^.onChange ==> handleChange(data.title))
                 ),
@@ -109,13 +108,11 @@ object TodoBox extends js.JSApp {
             <.div(^.className := "todoList",
                 <.div(
                     "Title:",
-                    <.input(
-                        ^.`type` := "text",
+                    <.input.text(
                         ^.value := state.titleValue,
                         ^.onChange ==> changeTitle),
                     "Detail:",
-                    <.input(
-                        ^.`type` := "text",
+                    <.input.text(
                         ^.value := state.detailValue,
                         ^.onChange ==> changeDetail),
                     <.button(^.onClick --> addTodo, "Add")
