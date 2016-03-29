@@ -126,9 +126,8 @@ object TodoBox extends js.JSApp {
     }
 
     val TodoList = ReactComponentB[TodoListData]("TodoList")
-        .initialState(TodoListState(Nil, None, None))
+        .initialState_P(TodoListState(_, None, None))
         .renderBackend[TodoListBackend]
-        .componentDidMount($ => $.modState(_.copy(data = $.props)))
         .build
 
     val TodoForm = ReactComponentB[Unit]("TodoForm")
