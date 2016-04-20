@@ -31,8 +31,12 @@ object TodoBox extends js.JSApp {
             borderColor.black
         )
 
-        val checkedTodo = style(textDecorationLine.lineThrough)
-        val notCheckedTodo = style(textDecorationLine.none)
+        val todoItem = styleF.bool(checked => styleS(
+            if (checked)
+                textDecorationLine.lineThrough
+            else
+                textDecorationLine.none
+        ))
     }
 
     final case class TodoData(title: String, detail: String)
@@ -50,8 +54,7 @@ object TodoBox extends js.JSApp {
 
         def render(state: TodoState, props: TodoProps) = props match {
             case (data, listBackend) => <.tr(
-                state.checked ?= TodoTableStyle.checkedTodo,
-                !state.checked ?= TodoTableStyle.notCheckedTodo,
+                TodoTableStyle.todoItem(state.checked),
                 <.td(TodoTableStyle.tableContent,
                     <.button(^.onClick --> listBackend.onDelete(data.title), "X")
                 ),
